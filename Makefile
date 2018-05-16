@@ -39,6 +39,6 @@ clean:
 	rm -f *.a *.so
 	rm -f simple_example
 	rm -f jsondump
-	rm -f filesimple
+	rm -f mysource/filesimple.o
 
 .PHONY: all clean test

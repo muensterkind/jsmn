@@ -8,9 +8,27 @@
  * tokens is predictable.
  */
 
-static const char *JSON_STRING =
-	"{\"user\": \"johndoe\", \"admin\": false, \"uid\": 1000,\n  "
-	"\"groups\": [\"users\", \"wheel\", \"audio\", \"video\"]}";
+char *readJSONFile() {
+	FILE *fp = fopen("/home/u21700648/project/jsmn/data.json", "r"); // open "data.json"
+	char oneLine[255] = "";
+	char *STRING;
+	STRING = (char *)malloc(sizeof(oneLine));
+	int length = 0;
+
+	while(1) {
+		fgets(oneLine, sizeof(oneLine), fp); // get the file line by line
+		if(feof(fp)) break;
+		length += strlen(oneLine); // entire size of the file
+		realloc(STRING, length + 1); // reallocate for the longer length of the string
+		strcat(STRING, oneLine); // make the file a string
+	}
+
+	puts(STRING);
+	fclose(fp);
+	return STRING;
+}
+
+
 
 static int jsoneq(const char *json, jsmntok_t *tok, const char *s) {
 	if (tok->type == JSMN_STRING && (int) strlen(s) == tok->end - tok->start &&
@@ -25,6 +43,8 @@ int main() {
 	int r;
 	jsmn_parser p;
 	jsmntok_t t[128]; /* We expect no more than 128 tokens */
+
+	char *JSON_STRING = readJSONFile();
 
 	jsmn_init(&p);
 	r = jsmn_parse(&p, JSON_STRING, strlen(JSON_STRING), t, sizeof(t)/sizeof(t[0]));
