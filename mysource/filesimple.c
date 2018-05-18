@@ -28,6 +28,16 @@ char *readJSONFile() {
 	return STRING;
 }
 
+void jsonNameList(char *jsonstr, jsmntok_t *t, int tokcount) {
+	printf("***** Name List *******\n");
+
+	int i, count = 0;
+	for(i = 0; i < tokcount; i++){
+		if((t+i)->type == JSMN_STRING && (t+i)->size == 1)
+		printf("[NAME%2d] %.*s\n", ++count, (t+i)->end-(t+i)->start, jsonstr + (t+i)->start);
+	}
+}
+
 static const char *JSON_STRING;
 
 static int jsoneq(const char *json, jsmntok_t *tok, const char *s) {
@@ -58,6 +68,10 @@ int main() {
 		printf("Object expected\n");
 		return 1;
 	}
+
+	jsonNameList(JSON_STRING, t, r);
+	return EXIT_SUCCESS;
+
 
 	/* Loop over all keys of the root object */
 	for (i = 1; i < r; i++) {
