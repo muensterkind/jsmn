@@ -19,7 +19,7 @@ char *readJSONFile() {
 		fgets(oneLine, sizeof(oneLine), fp); // get the file line by line
 		if(feof(fp)) break;
 		length += strlen(oneLine); // entire size of the file
-		realloc(STRING, length + 1); // reallocate for the longer length of the string
+		STRING = realloc(STRING, length + 1); // reallocate for the longer length of the string
 		strcat(STRING, oneLine); // make the file a string
 	}
 
@@ -28,13 +28,24 @@ char *readJSONFile() {
 	return STRING;
 }
 
-void jsonNameList(char *jsonstr, jsmntok_t *t, int tokcount) {
+void jsonNameList(char *jsonstr, jsmntok_t *t, int tokcount, int *nameTokIndex) {
+	int i, count = 0;
+	for(i = 0; i < tokcount; i++) {
+		if((t+i)->type == JSMN_STRING && (t+i)->size == 1) {
+			nameTokIndex[count] = i;
+			count++;
+		}
+	}
+}
+
+void printNameList(char *jsonstr, jsmntok_t *t, int *nameTokIndex) {
 	printf("***** Name List *******\n");
 
-	int i, count = 0;
-	for(i = 0; i < tokcount; i++){
-		if((t+i)->type == JSMN_STRING && (t+i)->size == 1)
-		printf("[NAME%2d] %.*s\n", ++count, (t+i)->end-(t+i)->start, jsonstr + (t+i)->start);
+	int count = 0, num = 0;
+	while(nameTokIndex[count] != '\0') {
+		num = nameTokIndex[count];
+		printf("[NAME%2d] %.*s\n", (count + 1), (t+num)->end-(t+num)->start, jsonstr+(t+num)->start);
+		count++;
 	}
 }
 
@@ -53,6 +64,9 @@ int main() {
 	int r;
 	jsmn_parser p;
 	jsmntok_t t[128]; /* We expect no more than 128 tokens */
+	int nameTokIndex[100]; // for index of tokens that point name
+	for (i = 0; i < 100; i++)
+		nameTokIndex[i] = '\0';
 
 	JSON_STRING = readJSONFile();
 
@@ -69,7 +83,9 @@ int main() {
 		return 1;
 	}
 
-	jsonNameList(JSON_STRING, t, r);
+	jsonNameList(JSON_STRING, t, r, nameTokIndex);
+	printNameList(JSON_STRING, t, nameTokIndex);
+
 	return EXIT_SUCCESS;
 
 
