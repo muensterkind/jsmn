@@ -49,6 +49,18 @@ void printNameList(char *jsonstr, jsmntok_t *t, int *nameTokIndex) {
 	}
 }
 
+void selectNameList(char *jsonstr, jsmntok_t *t, int *nameTokIndex) {
+	int no = 0, num = 0;
+	while(1) {
+		printf("\nSelect Name's no (exit:0) >> ");
+		scanf("%d", &no);
+		if(no == 0) break;
+		num = nameTokIndex[no-1];
+		printf("[NAME%2d] %.*s\n", no, (t+num)->end-(t+num)->start, jsonstr+(t+num)->start);
+		printf("%.*s\n", (t+num+1)->end-(t+num+1)->start, jsonstr+(t+num+1)->start);
+	}
+}
+
 static const char *JSON_STRING;
 
 static int jsoneq(const char *json, jsmntok_t *tok, const char *s) {
@@ -85,6 +97,7 @@ int main() {
 
 	jsonNameList(JSON_STRING, t, r, nameTokIndex);
 	printNameList(JSON_STRING, t, nameTokIndex);
+	selectNameList(JSON_STRING, t, nameTokIndex);
 
 	return EXIT_SUCCESS;
 
