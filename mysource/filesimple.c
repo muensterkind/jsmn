@@ -8,6 +8,7 @@
  * tokens is predictable.
  */
 
+/* read the JSON file */
 char *readJSONFile() {
 	FILE *fp = fopen("/home/u21700648/project/jsmn/data.json", "r"); // open "data.json"
 	char oneLine[255] = "";
@@ -28,42 +29,68 @@ char *readJSONFile() {
 	return STRING;
 }
 
+/* put names from the JSON file into a list */
 void jsonNameList(char *jsonstr, jsmntok_t *t, int tokcount, int *nameTokIndex) {
 	int i, count = 0;
 	for(i = 0; i < tokcount; i++) {
-		if((t+i)->type == JSMN_STRING && (t+i)->size == 1) {
-			nameTokIndex[count] = i;
+		if((t+i)->type == JSMN_STRING && (t+i)->size == 1) { // if the token means name
+			nameTokIndex[count] = i; // store the token number in the nameTokIndex array
 			count++;
 		}
 	}
 }
 
+/* print the list of names */
 void printNameList(char *jsonstr, jsmntok_t *t, int *nameTokIndex) {
 	printf("***** Name List *******\n");
 
 	int count = 0, num = 0;
 	while(nameTokIndex[count] != '\0') {
 		num = nameTokIndex[count];
-		printf("[NAME%2d] %.*s\n", (count + 1), (t+num)->end-(t+num)->start, jsonstr+(t+num)->start);
+		printf("[NAME%2d] %.*s\n", (count + 1), (t+num)->end-(t+num)->start, jsonstr+(t+num)->start); // print the name
 		count++;
 	}
 }
 
+/* selecting function for tho name list */
 void selectNameList(char *jsonstr, jsmntok_t *t, int *nameTokIndex) {
 	int no = 0, num = 0;
 	while(1) {
 		printf("\nSelect Name's no (exit:0) >> ");
 		scanf("%d", &no);
-		if(no == 0) break;
+		if(no == 0) break; // if user input 0, break
 		num = nameTokIndex[no-1];
-		printf("[NAME%2d] %.*s\n", no, (t+num)->end-(t+num)->start, jsonstr+(t+num)->start);
-		printf("%.*s\n", (t+num+1)->end-(t+num+1)->start, jsonstr+(t+num+1)->start);
+		printf("[NAME%2d] %.*s\n", no, (t+num)->end-(t+num)->start, jsonstr+(t+num)->start); // print the no's name
+		printf("%.*s\n", (t+num+1)->end-(t+num+1)->start, jsonstr+(t+num+1)->start); // print the no's value
 	}
 }
 
-static const char *JSON_STRING;
+/* put objects from the JSON file into a list */
+void objectNameList(char *jsonstr, jsmntok_t *t, int tokcount, int *objectTokIndex) {
+	int i, count = 0;
+	for(i = 0; i < tokcount; i++) {
+		if((t+i)->type == JSMN_OBJECT && (jsoneq(jsonstr, &t[i + 1], "name") == 0)) { // if the token means object
+			objectTokIndex[count] = i; // store the token number in the objectTokIndex array
+			count++;
+		}
+	}
+}
 
-static int jsoneq(const char *json, jsmntok_t *tok, const char *s) {
+/* print the list of object's names */
+void printObjectList(char *jsonstr, jsmntok_t *t, int *objectTokIndex) {
+	printf("***** Object List *******\n");
+
+	int count = 0, num = 0;
+	while(objectTokIndex[count] != '\0') {
+		num = objectTokIndex[count] + 2;
+		printf("[NAME%2d] %.*s\n", (count + 1), (t+num)->end-(t+num)->start, jsonstr+(t+num)->start); // print the object's name
+		count++;
+	}
+}
+
+static char *JSON_STRING;
+
+int jsoneq(const char *json, jsmntok_t *tok, const char *s) {
 	if (tok->type == JSMN_STRING && (int) strlen(s) == tok->end - tok->start &&
 			strncmp(json + tok->start, s, tok->end - tok->start) == 0) {
 		return 0;
@@ -77,8 +104,11 @@ int main() {
 	jsmn_parser p;
 	jsmntok_t t[128]; /* We expect no more than 128 tokens */
 	int nameTokIndex[100]; // for index of tokens that point name
-	for (i = 0; i < 100; i++)
+	int objectTokIndex[100]; // for index of tokens that point object
+	for (i = 0; i < 100; i++){
 		nameTokIndex[i] = '\0';
+		objectTokIndex[i] = '\0';
+	}
 
 	JSON_STRING = readJSONFile();
 
@@ -98,6 +128,9 @@ int main() {
 	jsonNameList(JSON_STRING, t, r, nameTokIndex);
 	printNameList(JSON_STRING, t, nameTokIndex);
 	selectNameList(JSON_STRING, t, nameTokIndex);
+
+	objectNameList(JSON_STRING, t, r, objectTokIndex);
+	printObjectList(JSON_STRING, t, objectTokIndex);
 
 	return EXIT_SUCCESS;
 
