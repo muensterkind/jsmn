@@ -73,6 +73,7 @@ void objectNameList(char *jsonstr, jsmntok_t *t, int tokcount, int *objectTokInd
 			objectTokIndex[count] = i; // store the token number in the objectTokIndex array
 			count++;
 		}
+		objectTokIndex[count] = tokcount; // store the tokcount for other functions
 	}
 }
 
@@ -81,10 +82,55 @@ void printObjectList(char *jsonstr, jsmntok_t *t, int *objectTokIndex) {
 	printf("***** Object List *******\n");
 
 	int count = 0, num = 0;
-	while(objectTokIndex[count] != '\0') {
+	while(objectTokIndex[count + 1] != '\0') {
 		num = objectTokIndex[count] + 2;
 		printf("[NAME%2d] %.*s\n", (count + 1), (t+num)->end-(t+num)->start, jsonstr+(t+num)->start); // print the object's name
 		count++;
+	}
+}
+
+/* print the first name and value of the object */
+void firstPrintObject(char *jsonstr, jsmntok_t *t, int *objectTokIndex, int no) {
+	int name = objectTokIndex[no-1] + 1; // first name of the object
+	int value = objectTokIndex[no-1] + 2; // first value of the object
+	if((t+objectTokIndex[no])->type != JSMN_ARRAY)
+		printf("%.*s : %.*s\n", (t+name)->end - (t+name)->start, jsonstr + (t+name)->start, // print the name
+														(t+value)->end - (t+value)->start, jsonstr + (t+value)->start); // print the value
+}
+
+/* print the selected object */
+void printSelectedObject(char *jsonstr, jsmntok_t *t, int *objectTokIndex, int no) {
+	int num = objectTokIndex[no-1] + 3; // where to start printing the selected object
+	int end = objectTokIndex[no]; // next object number
+	char *STRING;
+	STRING = (char *)malloc(100);
+	int length = 0;
+
+	while (num < end) {
+		length = (t+num)->end-(t+num)->start; // size of the token
+		if((t+num)->type == JSMN_STRING && (t+num)->size == 1) {
+			length += (t+num+1)->end-(t+num+1)->start; // size of the value
+			STRING = realloc(STRING, length + 6); // reallocate for changed length of the string
+			strcpy(STRING, "[");
+			strncat(STRING, jsonstr+(t+num)->start, (t+num)->end-(t+num)->start);
+			strcat(STRING, "]   ");
+			strncat(STRING, jsonstr+(t+num+1)->start, (t+num+1)->end-(t+num+1)->start);
+			printf("\t%s\n", STRING); // print the STRING ("\t[name]   value")
+		}
+		num++;
+	}
+}
+
+/* selecting function for the object's name list */
+void selectObjectList(char *jsonstr, jsmntok_t *t, int *objectTokIndex) {
+	int no = 0;
+
+	while(1) {
+		printf("\n원하는 번호 입력 (Exit:0) :");
+		scanf("%d", &no);
+		if(no == 0) break; // if user input 0, break
+		firstPrintObject(jsonstr, t, objectTokIndex, no); // print the first name and value of the object
+		printSelectedObject(jsonstr, t, objectTokIndex, no); // print the selected object
 	}
 }
 
@@ -131,6 +177,7 @@ int main() {
 
 	objectNameList(JSON_STRING, t, r, objectTokIndex);
 	printObjectList(JSON_STRING, t, objectTokIndex);
+	selectObjectList(JSON_STRING, t, objectTokIndex);
 
 	return EXIT_SUCCESS;
 
