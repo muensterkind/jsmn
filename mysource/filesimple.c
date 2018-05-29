@@ -10,7 +10,7 @@
 
 /* read the JSON file */
 char *readJSONFile() {
-	FILE *fp = fopen("/home/u21700648/project/jsmn/data.json", "r"); // open "data.json"
+	FILE *fp = fopen("/home/u21700648/project/jsmn/data2.json", "r"); // open "data.json"
 	char oneLine[255] = "";
 	char *STRING;
 	STRING = (char *)malloc(sizeof(oneLine));
@@ -33,7 +33,8 @@ char *readJSONFile() {
 void jsonNameList(char *jsonstr, jsmntok_t *t, int tokcount, int *nameTokIndex) {
 	int i, count = 0;
 	for(i = 0; i < tokcount; i++) {
-		if((t+i)->type == JSMN_STRING && (t+i)->size == 1) { // if the token means name
+		//printf("token%2d size: %d type: %d\n parent: %d", i, (t+i)->size, (t+i)->type, (t+i)->parent);
+		if((t+i)->type == JSMN_STRING && (t+i)->size == 1 && (t+i)->parent == 0) { // if the token means name
 			nameTokIndex[count] = i; // store the token number in the nameTokIndex array
 			count++;
 		}
@@ -69,7 +70,7 @@ void selectNameList(char *jsonstr, jsmntok_t *t, int *nameTokIndex) {
 void objectNameList(char *jsonstr, jsmntok_t *t, int tokcount, int *objectTokIndex) {
 	int i, count = 0;
 	for(i = 0; i < tokcount; i++) {
-		if((t+i)->type == JSMN_OBJECT && (jsoneq(jsonstr, &t[i + 1], "name") == 0)) { // if the token means object
+		if((t+i)->type == JSMN_OBJECT && (t+i+1)->parent == 0) { // if the token means object
 			objectTokIndex[count] = i; // store the token number in the objectTokIndex array
 			count++;
 		}
@@ -108,7 +109,7 @@ void printSelectedObject(char *jsonstr, jsmntok_t *t, int *objectTokIndex, int n
 
 	while (num < end) {
 		length = (t+num)->end-(t+num)->start; // size of the token
-		if((t+num)->type == JSMN_STRING && (t+num)->size == 1) {
+		if((t+num)->type == JSMN_STRING && (t+num)->size == 1 && (t+num)->parent == 0) {
 			length += (t+num+1)->end-(t+num+1)->start; // size of the value
 			STRING = realloc(STRING, length + 6); // reallocate for changed length of the string
 			strcpy(STRING, "[");
