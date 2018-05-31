@@ -10,7 +10,7 @@
 
 /* read the JSON file */
 char *readJSONFile() {
-	FILE *fp = fopen("/home/u21700648/project/jsmn/data2.json", "r"); // open "data.json"
+	FILE *fp = fopen("/home/u21700648/project/jsmn/data.json", "r"); // open "data.json"
 	char oneLine[255] = "";
 	char *STRING;
 	STRING = (char *)malloc(sizeof(oneLine));
@@ -31,12 +31,15 @@ char *readJSONFile() {
 
 /* put names from the JSON file into a list */
 void jsonNameList(char *jsonstr, jsmntok_t *t, int tokcount, int *nameTokIndex) {
-	int i, count = 0;
+	int i, count = 0, parent = 0;
 	for(i = 0; i < tokcount; i++) {
 		//printf("token%2d size: %d type: %d\n parent: %d", i, (t+i)->size, (t+i)->type, (t+i)->parent);
-		if((t+i)->type == JSMN_STRING && (t+i)->size == 1 && (t+i)->parent == 0) { // if the token means name
-			nameTokIndex[count] = i; // store the token number in the nameTokIndex array
-			count++;
+		if((t+i-1)->parent == 0) parent = (t+i)->parent;
+		if((t+i)->type == JSMN_STRING && (t+i)->size == 1) { // if the token means name
+			if((t->type == JSMN_OBJECT && (t+i)->parent == 0) || (t->type == JSMN_ARRAY && (t+i)->parent == parent)) {
+				nameTokIndex[count] = i; // store the token number in the nameTokIndex array
+				count++;
+			}
 		}
 	}
 }
@@ -68,11 +71,15 @@ void selectNameList(char *jsonstr, jsmntok_t *t, int *nameTokIndex) {
 
 /* put objects from the JSON file into a list */
 void objectNameList(char *jsonstr, jsmntok_t *t, int tokcount, int *objectTokIndex) {
-	int i, count = 0;
+	int i, count = 0, parent = 0;
 	for(i = 0; i < tokcount; i++) {
-		if((t+i)->type == JSMN_OBJECT && (t+i+1)->parent == 0) { // if the token means object
-			objectTokIndex[count] = i; // store the token number in the objectTokIndex array
-			count++;
+		if((t+i)->parent == 0) parent = (t+i)->parent;
+		if((t+i)->type == JSMN_OBJECT) { // if the token means object
+			if(t->type == JSMN_OBJECT && (t+i+1)->parent == 0 // if the first token is a object
+					|| (t->type == JSMN_ARRAY && (t+i)->parent == parent)) { // if the first token is an array
+				objectTokIndex[count] = i; // store the token number in the objectTokIndex array
+				count++;
+			}
 		}
 		objectTokIndex[count] = tokcount; // store the tokcount for other functions
 	}
@@ -91,7 +98,7 @@ void printObjectList(char *jsonstr, jsmntok_t *t, int *objectTokIndex) {
 }
 
 /* print the first name and value of the object */
-void firstPrintObject(char *jsonstr, jsmntok_t *t, int *objectTokIndex, int no) {
+void printFirstObject(char *jsonstr, jsmntok_t *t, int *objectTokIndex, int no) {
 	int name = objectTokIndex[no-1] + 1; // first name of the object
 	int value = objectTokIndex[no-1] + 2; // first value of the object
 	if((t+objectTokIndex[no])->type != JSMN_ARRAY)
@@ -101,22 +108,26 @@ void firstPrintObject(char *jsonstr, jsmntok_t *t, int *objectTokIndex, int no) 
 
 /* print the selected object */
 void printSelectedObject(char *jsonstr, jsmntok_t *t, int *objectTokIndex, int no) {
-	int num = objectTokIndex[no-1] + 3; // where to start printing the selected object
+	int num = objectTokIndex[no-1]+3, parent = objectTokIndex[no-1]; // where to start printing the selected object
 	int end = objectTokIndex[no]; // next object number
 	char *STRING;
 	STRING = (char *)malloc(100);
 	int length = 0;
 
 	while (num < end) {
+		if((t+num)->parent == 0) parent = (t+num)->parent;
 		length = (t+num)->end-(t+num)->start; // size of the token
-		if((t+num)->type == JSMN_STRING && (t+num)->size == 1 && (t+num)->parent == 0) {
-			length += (t+num+1)->end-(t+num+1)->start; // size of the value
-			STRING = realloc(STRING, length + 6); // reallocate for changed length of the string
-			strcpy(STRING, "[");
-			strncat(STRING, jsonstr+(t+num)->start, (t+num)->end-(t+num)->start);
-			strcat(STRING, "]   ");
-			strncat(STRING, jsonstr+(t+num+1)->start, (t+num+1)->end-(t+num+1)->start);
-			printf("\t%s\n", STRING); // print the STRING ("\t[name]   value")
+		if((t+num)->type == JSMN_STRING && (t+num)->size == 1) {
+			if(t->type == JSMN_OBJECT && (t+num)->parent == 0 // if the first token is a object
+					|| (t->type == JSMN_ARRAY && (t+num)->parent == parent)) { // if the first token is an array
+				length += (t+num+1)->end-(t+num+1)->start; // size of the value
+				STRING = realloc(STRING, length + 6); // reallocate for changed length of the string
+				strcpy(STRING, "[");
+				strncat(STRING, jsonstr+(t+num)->start, (t+num)->end-(t+num)->start);
+				strcat(STRING, "]   ");
+				strncat(STRING, jsonstr+(t+num+1)->start, (t+num+1)->end-(t+num+1)->start);
+				printf("\t%s\n", STRING); // print the STRING ("\t[name]   value")
+			}
 		}
 		num++;
 	}
@@ -130,7 +141,7 @@ void selectObjectList(char *jsonstr, jsmntok_t *t, int *objectTokIndex) {
 		printf("\n원하는 번호 입력 (Exit:0) :");
 		scanf("%d", &no);
 		if(no == 0) break; // if user input 0, break
-		firstPrintObject(jsonstr, t, objectTokIndex, no); // print the first name and value of the object
+		printFirstObject(jsonstr, t, objectTokIndex, no); // print the first name and value of the object
 		printSelectedObject(jsonstr, t, objectTokIndex, no); // print the selected object
 	}
 }
@@ -166,6 +177,10 @@ int main() {
 		return 1;
 	}
 
+	for (i = 0; i < r; i++) {
+			printf("t[%d]:%.*s\nparent:%d\n", i, t[i].end-t[i].start,
+					JSON_STRING + t[i].start, t[i].parent);
+	}
 	/* Assume the top-level element is an object */
 //	if (r < 1 || t[0].type != JSMN_OBJECT) {
 //		printf("Object expected\n");
