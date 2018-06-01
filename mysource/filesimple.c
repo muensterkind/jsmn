@@ -10,7 +10,12 @@
 
 /* read the JSON file */
 char *readJSONFile() {
-	FILE *fp = fopen("/home/u21700648/project/jsmn/data.json", "r"); // open "data.json"
+	char fileName[20] = "", address[50] = "/home/u21700648/project/jsmn/";
+	printf("원하는 파일명 입력 :");
+	gets(fileName);
+	strcat(address, fileName);
+	strcat(address, ".json");
+	FILE *fp = fopen(address, "r"); // open "data.json"
 	char oneLine[255] = "";
 	char *STRING;
 	STRING = (char *)malloc(sizeof(oneLine));
