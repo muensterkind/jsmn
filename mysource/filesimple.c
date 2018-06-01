@@ -11,11 +11,16 @@
 /* read the JSON file */
 char *readJSONFile() {
 	char fileName[20] = "", address[50] = "/home/u21700648/project/jsmn/";
-	printf("원하는 파일명 입력 :");
-	gets(fileName);
+	printf("원하는 파일명 입력 :"); // choose the file when the program is running
+	scanf("%s", fileName);
+	strcat(fileName, ".json");
 	strcat(address, fileName);
-	strcat(address, ".json");
-	FILE *fp = fopen(address, "r"); // open "data.json"
+	FILE *fp = NULL;
+	fp = fopen(address, "r"); // open the chosen file
+	if(fp == NULL) {
+		printf("%s 파일이 존재하지 않습니다.\n", fileName); // if the file doesn't exist
+		return "-1";
+	}
 	char oneLine[255] = "";
 	char *STRING;
 	STRING = (char *)malloc(sizeof(oneLine));
@@ -174,6 +179,7 @@ int main() {
 	}
 
 	JSON_STRING = readJSONFile();
+	if(JSON_STRING == "-1") return EXIT_SUCCESS;
 
 	jsmn_init(&p);
 	r = jsmn_parse(&p, JSON_STRING, strlen(JSON_STRING), t, sizeof(t)/sizeof(t[0]));
