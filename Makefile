@@ -6,7 +6,7 @@ all: libjsmn.a
 libjsmn.a: jsmn.o
 	$(AR) rc $@ $^
 
-%.o: %.c jsmn.h
+%.o: %.c jsmn.h mysource/productlist.h
 	$(CC) -DJSMN_PARENT_LINKS -c $(CFLAGS) $< -o $@
 
 test: test_default test_strict test_links test_strict_links
