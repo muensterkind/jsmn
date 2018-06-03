@@ -155,11 +155,35 @@ void selectObjectList(char *jsonstr, jsmntok_t *t, NameTokenInfo *nameTokenInfo)
 }
 
 int giveTokindex(char *jsonstr, jsmntok_t *t, NameTokenInfo *nameTokenInfo, int objectNo, char *name) {
-	int start = nameTokenInfo[objectNo - 1].objectindex;
-	int end = nameTokenInfo[objectNo].objectindex;
+	int start = nameTokenInfo[objectNo].objectindex;
+	int end = nameTokenInfo[objectNo + 1].objectindex;
 	int i = 0;
 	for(i = start; i < end; i++)
-		if(jsoneq(jsonstr, &t[i], name)) return i + 1;
+		if(jsoneq(jsonstr, &t[i], name) == 0) break;
+	return i + 1;
+}
+
+void printList(char *jsonstr, jsmntok_t *t, NameTokenInfo *nameTokenInfo) {
+	printf("****************************************\n");
+	printf("번호    제품명  제조사  가격    개수    \n");
+	int objectNo = 0;
+	int company = 0, name = 0, price = 0, count = 0;
+
+	while(nameTokenInfo[objectNo + 1].objectindex != '\0') {
+		name = giveTokindex(jsonstr, t, nameTokenInfo, objectNo, "name"); // invoke name's tokindex
+		company = giveTokindex(jsonstr, t, nameTokenInfo, objectNo, "company"); // invoke company's tokindex
+		price = giveTokindex(jsonstr, t, nameTokenInfo, objectNo, "price"); // invoke price's tokindex
+		count = giveTokindex(jsonstr, t, nameTokenInfo, objectNo, "count"); // invoke count's tokindex
+
+		printf("%-8d", objectNo + 1);
+		printf("%-11.*s", (t+name)->end - (t+name)->start, jsonstr + (t+name)->start);
+		printf("%-10.*s", (t+company)->end - (t+company)->start, jsonstr + (t+company)->start);
+		printf("%-8.*s", (t+price)->end - (t+price)->start, jsonstr + (t+price)->start);
+		printf("%-8.*s\n", (t+count)->end - (t+count)->start, jsonstr + (t+count)->start);
+
+		objectNo++;
+	}
+	printf("****************************************\n");
 }
 
 static char *JSON_STRING;
@@ -206,6 +230,8 @@ int main() {
 	objectNameList(JSON_STRING, t, r, Index);
 	printObjectList(JSON_STRING, t, Index);
 	selectObjectList(JSON_STRING, t, Index);
+
+	printList(JSON_STRING, t, Index);
 
 	return EXIT_SUCCESS;
 
