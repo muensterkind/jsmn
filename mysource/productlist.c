@@ -154,6 +154,14 @@ void selectObjectList(char *jsonstr, jsmntok_t *t, NameTokenInfo *nameTokenInfo)
 	}
 }
 
+int giveTokindex(char *jsonstr, jsmntok_t *t, NameTokenInfo *nameTokenInfo, int objectNo, char *name) {
+	int start = nameTokenInfo[objectNo - 1].objectindex;
+	int end = nameTokenInfo[objectNo].objectindex;
+	int i = 0;
+	for(i = start; i < end; i++)
+		if(jsoneq(jsonstr, &t[i], name)) return i + 1;
+}
+
 static char *JSON_STRING;
 
 int jsoneq(const char *json, jsmntok_t *tok, const char *s) {
