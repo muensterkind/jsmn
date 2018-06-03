@@ -75,8 +75,8 @@ void selectNameList(char *jsonstr, jsmntok_t *t, NameTokenInfo *nameTokenInfo) {
 		scanf("%d", &no);
 		if(no == 0) break; // if user input 0, break
 		num = nameTokenInfo[no-1].tokindex;
-		printf("[NAME%2d] %.*s\n", no, (t+num)->end-(t+num)->start, jsonstr+(t+num)->start); // print the no's name
-		printf("%.*s\n", (t+num+1)->end-(t+num+1)->start, jsonstr+(t+num+1)->start); // print the no's value
+		printf("[NAME%2d] %.*s\n", no, (t+num)->end - (t+num)->start, jsonstr+(t+num)->start); // print the no's name
+		printf("%.*s\n", (t+num+1)->end - (t+num+1)->start, jsonstr+(t+num+1)->start); // print the no's value
 	}
 }
 
