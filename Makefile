@@ -8,7 +8,7 @@ libjsmn.a: jsmn.o
 
 %.o: %.c jsmn.h mysource/productlist.h
 	$(CC) -DJSMN_PARENT_LINKS -c $(CFLAGS) $< -o $@
-
+	
 test: test_default test_strict test_links test_strict_links
 test_default: test/tests.c
 	$(CC) $(CFLAGS) $(LDFLAGS) $< -o test/$@
