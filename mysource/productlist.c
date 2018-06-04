@@ -168,22 +168,34 @@ void printList(char *jsonstr, jsmntok_t *t, NameTokenInfo *nameTokenInfo) {
 	printf("번호    제품명  제조사  가격    개수    \n");
 	int objectNo = 0;
 	int company = 0, name = 0, price = 0, count = 0;
+	int priceValue = 0, countValue = 0;
 
 	while(nameTokenInfo[objectNo + 1].objectindex != '\0') {
 		name = giveTokindex(jsonstr, t, nameTokenInfo, objectNo, "name"); // invoke name's tokindex
 		company = giveTokindex(jsonstr, t, nameTokenInfo, objectNo, "company"); // invoke company's tokindex
 		price = giveTokindex(jsonstr, t, nameTokenInfo, objectNo, "price"); // invoke price's tokindex
+		priceValue = stringToInt(jsonstr, t, price); // change the string into int value
 		count = giveTokindex(jsonstr, t, nameTokenInfo, objectNo, "count"); // invoke count's tokindex
+		countValue = stringToInt(jsonstr, t, count); // change the string into int value
 
 		printf("%-8d", objectNo + 1);
 		printf("%-11.*s", (t+name)->end - (t+name)->start, jsonstr + (t+name)->start);
 		printf("%-10.*s", (t+company)->end - (t+company)->start, jsonstr + (t+company)->start);
-		printf("%-8.*s", (t+price)->end - (t+price)->start, jsonstr + (t+price)->start);
-		printf("%-8.*s\n", (t+count)->end - (t+count)->start, jsonstr + (t+count)->start);
+		printf("%-8d", priceValue);
+		printf("%-8d\n", countValue);
 
 		objectNo++;
 	}
 	printf("****************************************\n");
+}
+
+int stringToInt(char *jsonstr, jsmntok_t *t, int num) {
+	char *STRING = "";
+	STRING = (char *)malloc((t+num)->end - (t+num)->start);
+	strncpy(STRING, jsonstr + (t+num)->start, (t+num)->end - (t+num)->start);
+	int value = atoi(STRING);
+	free(STRING);
+	return value;
 }
 
 static char *JSON_STRING;
