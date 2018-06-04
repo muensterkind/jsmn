@@ -164,8 +164,8 @@ int giveTokindex(char *jsonstr, jsmntok_t *t, NameTokenInfo *nameTokenInfo, int 
 }
 
 void printList(char *jsonstr, jsmntok_t *t, NameTokenInfo *nameTokenInfo) {
-	printf("****************************************\n");
-	printf("번호    제품명  제조사  가격    개수    \n");
+	printf("************************************************\n");
+	printf("번호    제품명  제조사  가격    개수    총가격  \n");
 	int objectNo = 0;
 	int company = 0, name = 0, price = 0, count = 0;
 	int priceValue = 0, countValue = 0;
@@ -182,11 +182,12 @@ void printList(char *jsonstr, jsmntok_t *t, NameTokenInfo *nameTokenInfo) {
 		printf("%-11.*s", (t+name)->end - (t+name)->start, jsonstr + (t+name)->start);
 		printf("%-10.*s", (t+company)->end - (t+company)->start, jsonstr + (t+company)->start);
 		printf("%-8d", priceValue);
-		printf("%-8d\n", countValue);
+		printf("%-8d", countValue);
+		printf("%-8d\n", priceValue * countValue);
 
 		objectNo++;
 	}
-	printf("****************************************\n");
+	printf("************************************************\n");
 }
 
 int stringToInt(char *jsonstr, jsmntok_t *t, int num) {
