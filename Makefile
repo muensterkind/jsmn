@@ -6,9 +6,9 @@ all: libjsmn.a
 libjsmn.a: jsmn.o
 	$(AR) rc $@ $^
 
-%.o: %.c jsmn.h mysource/productlist.h
+%.o: %.c jsmn.h
 	$(CC) -DJSMN_PARENT_LINKS -c $(CFLAGS) $< -o $@
-	
+
 test: test_default test_strict test_links test_strict_links
 test_default: test/tests.c
 	$(CC) $(CFLAGS) $(LDFLAGS) $< -o test/$@
@@ -30,6 +30,9 @@ simple_example: example/simple.o libjsmn.a
 
 myexample1: mysource/productlist.o libjsmn.a
 	$(CC) $(LDFLAGS) $^ -o $@
+
+myproduct: mysource/myproduct.o libjsmn.a
+		$(CC) $(LDFLAGS) $^ -o $@
 
 jsondump: example/jsondump.o libjsmn.a
 	$(CC) $(LDFLAGS) $^ -o $@
