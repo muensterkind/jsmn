@@ -1,0 +1,29 @@
+{
+  "Coupang":
+    [
+      {
+        "company": "탐사",
+        "name": "탐사수",
+        "price": 6300,
+        "count": 4
+      },
+      {
+        "company": "농심",
+        "name": "봉지라면",
+        "price": 14700,
+        "count": 20
+      },
+      {
+        "company": "다우니",
+        "name": "다우니",
+        "price": 11500,
+        "count": 3
+      },
+      {
+        "company": "센스",
+        "name": "물티슈",
+        "price": 6950,
+        "count": 10
+      }
+    ]
+}
