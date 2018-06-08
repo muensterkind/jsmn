@@ -1,8 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 #include "../jsmn.h"
-#include "productlist.h"
+#include "myproduct.h"
 
 
 /* read the JSON file */
@@ -36,129 +37,45 @@ char *readJSONFile() {
 	return STRING;
 }
 
-/* put names from the JSON file into a list */
-void jsonNameList(char *jsonstr, jsmntok_t *t, int tokcount, NameTokenInfo *nameTokenInfo) {
-	int i, count = 0, parent = 0;
-	for(i = 0; i < tokcount; i++) {
-		//printf("token%2d size: %d type: %d\n parent: %d", i, (t+i)->size, (t+i)->type, (t+i)->parent);
-		if((t+i)->type == JSMN_STRING && (t+i)->size == 1) { // if the token means name
-			if((t->type == JSMN_OBJECT && (t+1)->type == JSMN_STRING) && (t+2)->type == JSMN_ARRAY) { // if the token is in the first object's array
-				if((t+i)->parent == 0) continue; // if the token is array's name skip it
-				nameTokenInfo[count].tokindex = i; // store the token number in the Index->tokindex array
-				count++;
-			}
-		}
-	}
-}
+/* store JSON_STRING's tokens in product structures */
+int makeProduct(const char *json, jsmntok_t *t, int tokcount, product_t * p[]) {
+	int i, count = 0;
 
-/* print the list of names */
-void printNameList(char *jsonstr, jsmntok_t *t, NameTokenInfo *nameTokenInfo) {
-	printf("***** Name List *******\n");
-
-	int count = 0, num = 0;
-	while(nameTokenInfo[count].tokindex != '\0') {
-		num = nameTokenInfo[count].tokindex;
-		printf("[NAME%2d] %.*s\n", (count + 1), (t+num)->end-(t+num)->start, jsonstr+(t+num)->start); // print the name
-		count++;
-	}
-}
-
-/* selecting function for tho name list */
-void selectNameList(char *jsonstr, jsmntok_t *t, NameTokenInfo *nameTokenInfo) {
-	int no = 0, num = 0;
-	while(1) {
-		printf("\nSelect Name's no (exit:0) >> ");
-		scanf("%d", &no);
-		if(no == 0) break; // if user input 0, break
-		num = nameTokenInfo[no-1].tokindex;
-		printf("[NAME%2d] %.*s\n", no, (t+num)->end - (t+num)->start, jsonstr+(t+num)->start); // print the no's name
-		printf("%.*s\n", (t+num+1)->end - (t+num+1)->start, jsonstr+(t+num+1)->start); // print the no's value
-	}
-}
-
-/* put objects from the JSON file into a list */
-void objectNameList(char *jsonstr, jsmntok_t *t, int tokcount, NameTokenInfo *nameTokenInfo) {
-	int i, count = 0, parent = 0;
 	for(i = 1; i < tokcount; i++) {
-		if((t+i)->type == JSMN_OBJECT) { // if the token means object
-			if((t->type == JSMN_OBJECT && (t+1)->type == JSMN_STRING) && (t+2)->type == JSMN_ARRAY) { // if the token is in the first object's array
-				nameTokenInfo[count].objectindex = i; // store the token number in the Index->objectindex array
-				count++;
-			}
+		if((t+i)->type == JSMN_OBJECT && (t+i)->parent->type == JSMN_ARRAY) { // if the token means product object
+			p[count] = (product_t *)malloc(sizeof(product_t));
+			assert(p[count] != NULL);
+			inputInfo(json, t, i + 1, p[count]);
+			count++;
 		}
-		nameTokenInfo[count].objectindex = tokcount; // store the tokcount for other functions
+	}
+	return count;
+}
+
+/* input information into the productList */
+void inputInfo(char *json, jsmntok_t *t, int tokNum, product_t *product) {
+	while((t+tokNum)->type != JSMN_OBJECT) {
+		if (jsoneq(json, &t[tokNum], "company") == 0) product->company = checkCompany(tokNum+1);
+		else if (jsoneq(json, &t[tokNum], "name") == 0)
+			strncpy(product->name, json + (t+tokNum+1)->start, (t+tokNum+1)->end - (t+tokNum+1)->start);
+		else if (jsoneq(json, &t[tokNum], "price") == 0) product->price = stringToInt(json, t, tokNum+1);
+		else if (jsoneq(json, &t[tokNum], "count") == 0) product->count = stringToInt(json, t, tokNum+1);
+		tokNum += 2;
 	}
 }
 
-/* print the list of object's names */
-void printObjectList(char *jsonstr, jsmntok_t *t, NameTokenInfo *nameTokenInfo) {
-	printf("***** Object List *******\n");
-
-	int count = 0, num = 0;
-	while(nameTokenInfo[count + 1].objectindex != '\0') {
-		num = nameTokenInfo[count].objectindex + 2;
-		printf("[NAME%2d] %.*s\n", (count + 1), (t+num)->end-(t+num)->start, jsonstr+(t+num)->start); // print the object's name
-		count++;
-	}
+/* check the company name */
+company_t checkCompany(int num) {
+	company_t value = 0;
+	if (jsoneq(JSON_STRING, &t[num], "탐사") == 0) value = TAMSAA;
+	else if (jsoneq(JSON_STRING, &t[num], "농심") == 0) value = NONGSHIM;
+	else if (jsoneq(JSON_STRING, &t[num], "다우니") == 0) value = DOWNY;
+	else if (jsoneq(JSON_STRING, &t[num], "센스") == 0) value = SENSE;
+	else value = -1;
+	return value;
 }
 
-/* print the first name and value of the object */
-void printFirstObject(char *jsonstr, jsmntok_t *t, NameTokenInfo *nameTokenInfo, int no) {
-	int name = nameTokenInfo[no - 1].objectindex + 1; // first name of the object
-	int value = nameTokenInfo[no - 1].objectindex + 2; // first value of the object
-	if((t + nameTokenInfo[no].objectindex)->type != JSMN_ARRAY)
-		printf("%.*s : %.*s\n", (t+name)->end - (t+name)->start, jsonstr + (t+name)->start, // print the name
-														(t+value)->end - (t+value)->start, jsonstr + (t+value)->start); // print the value
-}
-
-/* print the selected object */
-void printSelectedObject(char *jsonstr, jsmntok_t *t, NameTokenInfo *nameTokenInfo, int no) {
-	int num = nameTokenInfo[no - 1].objectindex + 3, parent = nameTokenInfo[no - 1].objectindex; // where to start printing the selected object
-	int end = nameTokenInfo[no].objectindex; // last object number
-	char *STRING;
-	STRING = (char *)malloc(100);
-	int length = 0;
-
-	while (num < end) {
-		if((t+num)->parent == 0) parent = (t+num)->parent;
-		length = (t+num)->end-(t+num)->start; // size of the token
-		if((t+num)->type == JSMN_STRING && (t+num)->size == 1) {
-			if((t->type == JSMN_OBJECT && (t+1)->type == JSMN_STRING) && (t+2)->type == JSMN_ARRAY) { // if the token is in the first object's array
-				length += (t+num+1)->end-(t+num+1)->start; // size of the value
-				STRING = realloc(STRING, length + 6); // reallocate for changed length of the string
-				strcpy(STRING, "[");
-				strncat(STRING, jsonstr+(t+num)->start, (t+num)->end-(t+num)->start);
-				strcat(STRING, "]   ");
-				strncat(STRING, jsonstr+(t+num+1)->start, (t+num+1)->end-(t+num+1)->start);
-				printf("\t%s\n", STRING); // print the STRING ("\t[name]   value")
-			}
-		}
-		num++;
-	}
-}
-
-/* selecting function for the object's name list */
-void selectObjectList(char *jsonstr, jsmntok_t *t, NameTokenInfo *nameTokenInfo) {
-	int no = 0;
-
-	while(1) {
-		printf("\n원하는 번호 입력 (Exit:0) :");
-		scanf("%d", &no);
-		if(no == 0) break; // if user input 0, break
-		printFirstObject(jsonstr, t, nameTokenInfo, no); // print the first name and value of the object
-		printSelectedObject(jsonstr, t, nameTokenInfo, no); // print the selected object
-	}
-}
-
-int giveTokindex(char *jsonstr, jsmntok_t *t, NameTokenInfo *nameTokenInfo, int objectNo, char *name) {
-	int start = nameTokenInfo[objectNo].objectindex;
-	int end = nameTokenInfo[objectNo + 1].objectindex;
-	int i = 0;
-	for(i = start; i < end; i++)
-		if(jsoneq(jsonstr, &t[i], name) == 0) break;
-	return i + 1;
-}
-
+/* print objects list */
 void printList(char *jsonstr, jsmntok_t *t, NameTokenInfo *nameTokenInfo) {
 	printf("************************************************\n");
 	printf("번호    제품명  제조사  가격    개수    총가격  \n");
@@ -186,6 +103,7 @@ void printList(char *jsonstr, jsmntok_t *t, NameTokenInfo *nameTokenInfo) {
 	printf("************************************************\n");
 }
 
+/* change token string that means integer into int type */
 int stringToInt(char *jsonstr, jsmntok_t *t, int num) {
 	char *STRING = "";
 	STRING = (char *)malloc((t+num)->end - (t+num)->start);
@@ -206,15 +124,12 @@ int jsoneq(const char *json, jsmntok_t *tok, const char *s) {
 }
 
 int main() {
-	int i;
-	int r;
+	int i = 0;
+	int r = 0;
+	int pcount = 0;
 	jsmn_parser p;
 	jsmntok_t t[128]; /* We expect no more than 128 tokens */
-	NameTokenInfo Index[100]; // for index of tokens that point names and objects
-	for (i = 0; i < 100; i++){
-		Index[i].tokindex = '\0';
-		Index[i].objectindex = '\0';
-	}
+	product_t *coupangList[20]; // for saving product information
 
 	JSON_STRING = readJSONFile();
 	if(JSON_STRING == "-1") return EXIT_SUCCESS;
@@ -226,14 +141,7 @@ int main() {
 		return 1;
 	}
 
-
-	jsonNameList(JSON_STRING, t, r, Index);
-	printNameList(JSON_STRING, t, Index);
-	selectNameList(JSON_STRING, t, Index);
-
-	objectNameList(JSON_STRING, t, r, Index);
-	printObjectList(JSON_STRING, t, Index);
-	selectObjectList(JSON_STRING, t, Index);
+	pcount = makeProduct(JSON_STRING, t, r, coupangList);
 
 	printList(JSON_STRING, t, Index);
 

@@ -22,7 +22,7 @@ typedef struct {
 typedef enum {
 	TAMSAA = 0,    // 탐사
 	NONGSHIM = 1,  // 농심
-	DOWNY = 2,     // 다우
+	DOWNY = 2,     // 다우니
 	SENSE = 3,     // 센스
 } company_t;
 
