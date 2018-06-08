@@ -49,7 +49,8 @@ company_t checkCompany(char *json, jsmntok_t *t, int num) {
 }
 
 /* input information into the productList */
-void inputInfo(char *json, jsmntok_t *t, int tokNum, product_t *product) {
+void inputInfo(char *json, jsmntok_t *t, int tokCount, int tokNum, product_t *product) {
+	strcpy(product->name, "\0");
 	while((t+tokNum)->type != JSMN_OBJECT) {
 		if (jsoneq(json, &t[tokNum], "company") == 0) product->company = checkCompany(json, t, tokNum+1);
 		else if (jsoneq(json, &t[tokNum], "name") == 0)
@@ -57,21 +58,22 @@ void inputInfo(char *json, jsmntok_t *t, int tokNum, product_t *product) {
 		else if (jsoneq(json, &t[tokNum], "price") == 0) product->price = stringToInt(json, t, tokNum+1);
 		else if (jsoneq(json, &t[tokNum], "count") == 0) product->count = stringToInt(json, t, tokNum+1);
 		tokNum += 2;
+		if(tokNum >= tokCount) break;
 	}
 }
 
 /* store JSON_STRING's tokens in product structures */
 int makeProduct(char *json, jsmntok_t *t, int tokcount, product_t * p[]) {
 	int i, count = 0;
-
 	for(i = 1; i < tokcount; i++) {
 		if((t+i)->type == JSMN_OBJECT && (t+(t+i)->parent)->type == JSMN_ARRAY) { // if the token means product object
 			p[count] = (product_t *)malloc(sizeof(product_t));
 			assert(p[count] != NULL);
-			inputInfo(json, t, i + 1, p[count]);
+			inputInfo(json, t, tokcount, i + 1, p[count]);
 			count++;
 		}
 	}
+
 	return count;
 }
 
@@ -85,18 +87,34 @@ int stringToInt(char *jsonstr, jsmntok_t *t, int num) {
 	return value;
 }
 
-void printProduct(product_t * p[], int pcount) {
-	int i = 0;
-	printf("****************************************\n");
-	printf("번호    제품명  제조사  가격    개수    \n");
-	for(i = 0; i < pcount; i++) {
-		printf("%-8d", i + 1);
-		printf("%-10s", p[i]->name);
-		printf("%-10c", p[i]->company);
-		printf("%-8d", p[i]->price);
-		printf("%-8d\n", p[i]->count);
+char *companyToString(company_t company) {
+	switch(company){
+	case TAMSAA:	return "탐사";
+	case NONGSHIM: return "농심";
+	case DOWNY:	return "다우니";
+	case SENSE:	return "센스";
 	}
-	printf("****************************************\n");
+}
+
+void printProduct(product_t * p[], int pcount) {
+	int i;
+	char num[10];
+	printf("****************************************************\n");
+	printf("%-8s%-14s%-14s%-10s%-10s%-10s\n", "번호", "제품명", "제조사", "가격", "개수", "1개가격");
+	printf("****************************************************\n");
+//	printf("번호  제품명    제조사    가격    개수    \n");
+	for(i = 0; i < pcount; i++) {
+		sprintf(num, "%d", i + 1);
+		printf("%-6s", num);
+		printf("%-15s", p[i]->name);
+		printf("%-14s", companyToString(p[i]->company));
+		sprintf(num, "%-8d", p[i]->price);
+		printf("%-s", num);
+		sprintf(num, "%-8d", p[i]->count);
+		printf("%-s", num);
+		printf("%-d\n", p[i]->price / p[i]->count);
+	}
+	printf("****************************************************\n");
 }
 
 static char *JSON_STRING;
