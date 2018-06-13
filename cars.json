@@ -7,10 +7,28 @@
                 "gas": "gasoline"
               },
               {
-                "model": "Sonata",
-                "maker": "Hyundai",
-                "year": 2016,
+                "model": "aaa",
+                "maker": "GroupA",
+                "year": 2017,
+                "gas": "diesel"
+              },
+              {
+                "model": "bbb",
+                "maker": "GroupB",
+                "year": 2015,
+                "gas": "lpg"
+              },
+              {
+                "model": "ccc",
+                "maker": "GroupC",
+                "year": 2018,
                 "gas": "gasoline"
+              },
+              {
+                "model": "ddd",
+                "maker": "GroupD",
+                "year": 2010,
+                "gas": "diesel"
               }
     ]
 }
